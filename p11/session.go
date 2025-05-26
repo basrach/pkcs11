@@ -24,11 +24,11 @@ type Session interface {
 	// (like Yubikeys in PIV mode). See
 	// https://github.com/letsencrypt/pkcs11key/blob/master/key.go for an example
 	// of managing login state with a mutex.
-	Login(pin string) error
+	Login(pin []byte) error
 	// LoginSecurityOfficer logs into the token as the security officer.
-	LoginSecurityOfficer(pin string) error
+	LoginSecurityOfficer(pin []byte) error
 	// LoginAs logs into the token with the given user type.
-	LoginAs(userType uint, pin string) error
+	LoginAs(userType uint, pin []byte) error
 	// Logout logs out all sessions from the token (see Login).
 	Logout() error
 	// Close closes the session.
@@ -50,10 +50,10 @@ type Session interface {
 	GenerateRandom(length int) ([]byte, error)
 
 	// InitPIN initialize's the normal user's PIN.
-	InitPIN(pin string) error
+	InitPIN(pin []byte) error
 	// SetPIN modifies the PIN of the logged-in user. "old" should contain the
 	// current PIN, and "new" should contain the new PIN to be set.
-	SetPIN(old, new string) error
+	SetPIN(old, new []byte) error
 }
 
 type sessionImpl struct {
@@ -143,15 +143,15 @@ func (s *sessionImpl) Close() error {
 	return s.ctx.CloseSession(s.handle)
 }
 
-func (s *sessionImpl) Login(pin string) error {
+func (s *sessionImpl) Login(pin []byte) error {
 	return s.LoginAs(pkcs11.CKU_USER, pin)
 }
 
-func (s *sessionImpl) LoginSecurityOfficer(pin string) error {
+func (s *sessionImpl) LoginSecurityOfficer(pin []byte) error {
 	return s.LoginAs(pkcs11.CKU_SO, pin)
 }
 
-func (s *sessionImpl) LoginAs(userType uint, pin string) error {
+func (s *sessionImpl) LoginAs(userType uint, pin []byte) error {
 	s.Lock()
 	defer s.Unlock()
 	return s.ctx.Login(s.handle, userType, pin)
@@ -182,13 +182,13 @@ func (s *sessionImpl) CreateObject(template []*pkcs11.Attribute) (Object, error)
 	}, nil
 }
 
-func (s *sessionImpl) InitPIN(pin string) error {
+func (s *sessionImpl) InitPIN(pin []byte) error {
 	s.Lock()
 	defer s.Unlock()
 	return s.ctx.InitPIN(s.handle, pin)
 }
 
-func (s *sessionImpl) SetPIN(old, new string) error {
+func (s *sessionImpl) SetPIN(old, new []byte) error {
 	s.Lock()
 	defer s.Unlock()
 	return s.ctx.SetPIN(s.handle, old, new)

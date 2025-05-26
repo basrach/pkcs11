@@ -75,7 +75,7 @@ func (s Slot) Mechanisms() ([]Mechanism, error) {
 // destroyed are destroyed (i.e., all except for 'indestructible' objects such
 // as keys built into the token). Also, access by the normal user is disabled
 // until the SO sets the normal user’s PIN."
-func (s Slot) InitToken(securityOfficerPIN string, tokenLabel string) error {
+func (s Slot) InitToken(securityOfficerPIN []byte, tokenLabel string) error {
 	return s.ctx.InitToken(s.id, securityOfficerPIN, tokenLabel)
 }
 

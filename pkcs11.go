@@ -180,26 +180,25 @@ CK_RV GetMechanismInfo(struct ctx * c, CK_ULONG slotID, CK_MECHANISM_TYPE mech,
 	return e;
 }
 
-CK_RV InitToken(struct ctx * c, CK_ULONG slotID, char *pin, CK_ULONG pinlen,
+CK_RV InitToken(struct ctx * c, CK_ULONG slotID, CK_BYTE_PTR pin, CK_ULONG pinlen,
 		char *label)
 {
 	CK_RV e =
-	    c->sym->C_InitToken((CK_SLOT_ID) slotID, (CK_UTF8CHAR_PTR) pin,
+	    c->sym->C_InitToken((CK_SLOT_ID) slotID, pin,
 				pinlen, (CK_UTF8CHAR_PTR) label);
 	return e;
 }
 
-CK_RV InitPIN(struct ctx * c, CK_SESSION_HANDLE sh, char *pin, CK_ULONG pinlen)
+CK_RV InitPIN(struct ctx * c, CK_SESSION_HANDLE sh, CK_BYTE_PTR pin, CK_ULONG pinlen)
 {
-	CK_RV e = c->sym->C_InitPIN(sh, (CK_UTF8CHAR_PTR) pin, pinlen);
+	CK_RV e = c->sym->C_InitPIN(sh, pin, pinlen);
 	return e;
 }
 
-CK_RV SetPIN(struct ctx * c, CK_SESSION_HANDLE sh, char *oldpin,
-	     CK_ULONG oldpinlen, char *newpin, CK_ULONG newpinlen)
+CK_RV SetPIN(struct ctx * c, CK_SESSION_HANDLE sh, CK_BYTE_PTR oldpin,
+	     CK_ULONG oldpinlen, CK_BYTE_PTR newpin, CK_ULONG newpinlen)
 {
-	CK_RV e = c->sym->C_SetPIN(sh, (CK_UTF8CHAR_PTR) oldpin, oldpinlen,
-				   (CK_UTF8CHAR_PTR) newpin, newpinlen);
+	CK_RV e = c->sym->C_SetPIN(sh, oldpin, oldpinlen, newpin, newpinlen);
 	return e;
 }
 
@@ -255,13 +254,13 @@ CK_RV SetOperationState(struct ctx * c, CK_SESSION_HANDLE session,
 }
 
 CK_RV Login(struct ctx *c, CK_SESSION_HANDLE session, CK_USER_TYPE userType,
-	    char *pin, CK_ULONG pinLen)
+			CK_BYTE_PTR pin, CK_ULONG pinLen)
 {
 	if (pinLen == 0) {
 		pin = NULL;
 	}
 	CK_RV e =
-	    c->sym->C_Login(session, userType, (CK_UTF8CHAR_PTR) pin, pinLen);
+	    c->sym->C_Login(session, userType, pin, pinLen);
 	return e;
 }
 
@@ -926,9 +925,7 @@ func (c *Ctx) GetMechanismInfo(slotID uint, m []*Mechanism) (MechanismInfo, erro
 // InitToken initializes a token. The label must be 32 characters
 // long, it is blank padded if it is not. If it is longer it is capped
 // to 32 characters.
-func (c *Ctx) InitToken(slotID uint, pin string, label string) error {
-	p := C.CString(pin)
-	defer C.free(unsafe.Pointer(p))
+func (c *Ctx) InitToken(slotID uint, pin []byte, label string) error {
 	ll := len(label)
 	for ll < 32 {
 		label += " "
@@ -936,25 +933,19 @@ func (c *Ctx) InitToken(slotID uint, pin string, label string) error {
 	}
 	l := C.CString(label[:32])
 	defer C.free(unsafe.Pointer(l))
-	e := C.InitToken(c.ctx, C.CK_ULONG(slotID), p, C.CK_ULONG(len(pin)), l)
+	e := C.InitToken(c.ctx, C.CK_ULONG(slotID), C.CK_BYTE_PTR(unsafe.Pointer(&pin[0])), C.CK_ULONG(len(pin)), l)
 	return toError(e)
 }
 
 // InitPIN initializes the normal user's PIN.
-func (c *Ctx) InitPIN(sh SessionHandle, pin string) error {
-	p := C.CString(pin)
-	defer C.free(unsafe.Pointer(p))
-	e := C.InitPIN(c.ctx, C.CK_SESSION_HANDLE(sh), p, C.CK_ULONG(len(pin)))
+func (c *Ctx) InitPIN(sh SessionHandle, pin []byte) error {
+	e := C.InitPIN(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_BYTE_PTR(unsafe.Pointer(&pin[0])), C.CK_ULONG(len(pin)))
 	return toError(e)
 }
 
 // SetPIN modifies the PIN of the user who is logged in.
-func (c *Ctx) SetPIN(sh SessionHandle, oldpin string, newpin string) error {
-	old := C.CString(oldpin)
-	defer C.free(unsafe.Pointer(old))
-	new := C.CString(newpin)
-	defer C.free(unsafe.Pointer(new))
-	e := C.SetPIN(c.ctx, C.CK_SESSION_HANDLE(sh), old, C.CK_ULONG(len(oldpin)), new, C.CK_ULONG(len(newpin)))
+func (c *Ctx) SetPIN(sh SessionHandle, oldpin []byte, newpin []byte) error {
+	e := C.SetPIN(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_BYTE_PTR(unsafe.Pointer(&oldpin[0])), C.CK_ULONG(len(oldpin)), C.CK_BYTE_PTR(unsafe.Pointer(&newpin[0])), C.CK_ULONG(len(newpin)))
 	return toError(e)
 }
 
@@ -1018,10 +1009,8 @@ func (c *Ctx) SetOperationState(sh SessionHandle, state []byte, encryptKey, auth
 }
 
 // Login logs a user into a token.
-func (c *Ctx) Login(sh SessionHandle, userType uint, pin string) error {
-	p := C.CString(pin)
-	defer C.free(unsafe.Pointer(p))
-	e := C.Login(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_USER_TYPE(userType), p, C.CK_ULONG(len(pin)))
+func (c *Ctx) Login(sh SessionHandle, userType uint, pin []byte) error {
+	e := C.Login(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_USER_TYPE(userType), C.CK_BYTE_PTR(unsafe.Pointer(&pin[0])), C.CK_ULONG(len(pin)))
 	return toError(e)
 }
 

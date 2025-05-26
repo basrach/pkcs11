@@ -120,7 +120,7 @@ func makeSigner(context *Ctx) (*signer, error) {
 		return nil, err
 	}
 
-	if err = context.Login(session, CKU_USER, pin); err != nil {
+	if err = context.Login(session, CKU_USER, []byte(pin)); err != nil {
 		context.CloseSession(session)
 		return nil, err
 	}

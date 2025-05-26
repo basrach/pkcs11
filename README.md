@@ -1,3 +1,10 @@
+# Reason for Fork
+
+The original project passed the PIN as a string, which led to it being copied during interop with the underlying C library. This made it impossible to reliably overwrite the PIN in memory after use, posing a potential security risk in scenarios where memory dumps are a concern.
+
+To address this, the API was modified to accept the PIN as a byte array, allowing for explicit memory zeroing after processing. Due to this breaking change in the API, a fork was made to continue development with enhanced control over sensitive data handling.
+
+
 # PKCS#11
 
 This is a Go implementation of the PKCS#11 API. It wraps the library closely, but uses Go idiom where

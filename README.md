@@ -51,7 +51,9 @@ if err != nil {
 }
 defer p.CloseSession(session)
 
-err = p.Login(session, pkcs11.CKU_USER, "1234")
+pin := []byte("1234")
+err = p.Login(session, pkcs11.CKU_USER, pin)
+rand.Random(pin)
 if err != nil {
     panic(err)
 }

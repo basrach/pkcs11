@@ -100,3 +100,8 @@ func (o Object) Destroy() error {
 	defer s.Unlock()
 	return s.ctx.DestroyObject(s.handle, o.objectHandle)
 }
+
+// Handle returns the handle of an object.
+func (o Object) Handle() pkcs11.ObjectHandle {
+	return o.objectHandle
+}

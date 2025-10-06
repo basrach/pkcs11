@@ -268,7 +268,7 @@ func NewMechanism(mech uint, x interface{}) *Mechanism {
 		m.Parameter = p
 	default:
 		panic("parameter must be one of type: []byte, *GCMParams, *OAEPParams, *ECDH1DeriveParams," +
-			  " *RSAAESKeyWrapParams")
+			" *RSAAESKeyWrapParams")
 	}
 
 	return m
@@ -321,4 +321,11 @@ func cMessage(data []byte) (dataPtr C.CK_BYTE_PTR) {
 		data = stubData
 	}
 	return C.CK_BYTE_PTR(unsafe.Pointer(&data[0]))
+}
+
+func cSliceData(b []byte) C.CK_BYTE_PTR {
+	if len(b) == 0 {
+		return nil
+	}
+	return C.CK_BYTE_PTR(unsafe.Pointer(&b[0]))
 }

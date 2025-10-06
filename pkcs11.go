@@ -933,19 +933,19 @@ func (c *Ctx) InitToken(slotID uint, pin []byte, label string) error {
 	}
 	l := C.CString(label[:32])
 	defer C.free(unsafe.Pointer(l))
-	e := C.InitToken(c.ctx, C.CK_ULONG(slotID), C.CK_BYTE_PTR(unsafe.Pointer(&pin[0])), C.CK_ULONG(len(pin)), l)
+	e := C.InitToken(c.ctx, C.CK_ULONG(slotID), C.CK_BYTE_PTR(unsafe.Pointer(cSliceData(pin))), C.CK_ULONG(len(pin)), l)
 	return toError(e)
 }
 
 // InitPIN initializes the normal user's PIN.
 func (c *Ctx) InitPIN(sh SessionHandle, pin []byte) error {
-	e := C.InitPIN(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_BYTE_PTR(unsafe.Pointer(&pin[0])), C.CK_ULONG(len(pin)))
+	e := C.InitPIN(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_BYTE_PTR(unsafe.Pointer(cSliceData(pin))), C.CK_ULONG(len(pin)))
 	return toError(e)
 }
 
 // SetPIN modifies the PIN of the user who is logged in.
 func (c *Ctx) SetPIN(sh SessionHandle, oldpin []byte, newpin []byte) error {
-	e := C.SetPIN(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_BYTE_PTR(unsafe.Pointer(&oldpin[0])), C.CK_ULONG(len(oldpin)), C.CK_BYTE_PTR(unsafe.Pointer(&newpin[0])), C.CK_ULONG(len(newpin)))
+	e := C.SetPIN(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_BYTE_PTR(unsafe.Pointer(cSliceData(oldpin))), C.CK_ULONG(len(oldpin)), C.CK_BYTE_PTR(unsafe.Pointer(cSliceData(newpin))), C.CK_ULONG(len(newpin)))
 	return toError(e)
 }
 
@@ -1010,7 +1010,7 @@ func (c *Ctx) SetOperationState(sh SessionHandle, state []byte, encryptKey, auth
 
 // Login logs a user into a token.
 func (c *Ctx) Login(sh SessionHandle, userType uint, pin []byte) error {
-	e := C.Login(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_USER_TYPE(userType), C.CK_BYTE_PTR(unsafe.Pointer(&pin[0])), C.CK_ULONG(len(pin)))
+	e := C.Login(c.ctx, C.CK_SESSION_HANDLE(sh), C.CK_USER_TYPE(userType), C.CK_BYTE_PTR(unsafe.Pointer(cSliceData(pin))), C.CK_ULONG(len(pin)))
 	return toError(e)
 }
 

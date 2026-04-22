@@ -8,6 +8,19 @@ type Slot struct {
 	id  uint
 }
 
+// NewSlot create new instance of [Slot].
+func NewSlot(id uint, ctx *pkcs11.Ctx) Slot {
+	return Slot{
+		id:  id,
+		ctx: ctx,
+	}
+}
+
+// Ctx returns low level pkcs11 context.
+func (s Slot) Ctx() *pkcs11.Ctx {
+	return s.ctx
+}
+
 // Info returns information about the Slot.
 func (s Slot) Info() (pkcs11.SlotInfo, error) {
 	return s.ctx.GetSlotInfo(s.id)
